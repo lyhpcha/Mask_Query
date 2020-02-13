@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!--Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  
+</head>
+
+
+<body>
+    <!-- Bootstrap JS-->
+    <script src="https://cdn.jsdelivr.net/npm/tw-city-selector@2.1.0/dist/tw-city-selector.min.js" integrity="sha256-YXrAs7HworOykO4OSdfMRg5O3asXAUyqsCu9RvFy5U4=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+    <!--Vue.js-->
+    <!-- <script src="./lib/vue.min.js"></script> -->
+    
+    <!--AXIOS: AJAX -->
+    <script src="./lib/axios-0.19/axios.js"></script>
+    
+    <div class="container" id="continer_1">
+        <div class="row py-3 px-lg-5">
+            <div class="col">
+                <div class="city-selector">                     
+                    <!-- 縣市選單 -->
+                    <select class="county" id="countyID"></select>                    
+                    <!-- 區域選單 -->
+                    <select class="district" id="districtID"></select>            
+                         
+                    <button type="button" id="btnQueryCity">查詢</button>           
+                </div> 
+            </div>  
+             
+            <div class="col">
+                資料來源：<a href="https://data.nhi.gov.tw/Datasets/DatasetResource.aspx?rId=A21030000I-D50001-001">健保署資料開啟服務</a>
+            </div>  
+
+            <div class="col">
+                本站使用Firebase免費方案建置，超過流量限制則無法查詢，謝謝。
+            </div>
+            
+        </div>
+                
+        <div class="row py-3 px-lg-5">        
+            <div class="col">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">藥局名稱</th>
+                      <th scope="col">地址</th>
+                      <th scope="col">電話</th>
+                      <th scope="col">大人</th>
+                      <th scope="col">兒童</th>
+                      <th scope="col">更新時間</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody_data">                  
+                  </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="row py-3 px-lg-5 d-none" id="spinner">
+            <div class="col">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>    
+    
+</body>
+
+</html>
+
+
+<script> 
+         
+let address = "";
+
+function AjaxGet(checkstr) { 
+
+    const CORS = 'https://cors-anywhere.herokuapp.com/'; // use cors-anywhere to fetch api data
+
+    const CSV_URL = "http://data.nhi.gov.tw/Datasets/Download.ashx?rid=A21030000I-D50001-001&l=https://data.nhi.gov.tw/resource/mask/maskdata.csv"
+
+
+    $("#tbody_data").html("");
+    $("#spinner").removeClass("d-none");
+
+    checkstr.toString().replace("臺","台");
+    
+    axios.get(CORS + CSV_URL)
+        .then((res) => { 
+            let htmlcode ="";
+            reslines = res.data.split(/\r\n|\n/); //依Enter切割CSV Text
+            reslines.splice(0,1); //移除第一行（欄位名）
+            reslines.splice((reslines.length-1),1); //移除最後一行（空白行）
+            reslines.forEach(element => {     
+                element = element.replace("臺","台");            
+                if (element.indexOf(checkstr) != -1 ) {
+                    rowdata = element.split(',');            
+                    lastupdate = rowdata[6].split(" ");
+                    htmlcode = htmlcode +
+                               '<tr>' + 
+                               '<td>' + rowdata[1] + '</td>' +
+                               '<td>' + rowdata[2] + '</td>' +
+                               '<td>' + rowdata[3] + '</td>' +
+                               '<td>' + rowdata[4] + '</td>' +
+                               '<td>' + rowdata[5] + '</td>' +
+                               '<td>' + lastupdate[1] + '</td>' +
+                               '</tr>';
+                }
+            });
+            
+            $("#tbody_data").html(htmlcode);
+            $("#spinner").addClass("d-none");
+            
+        })
+        .catch((error) => { alert(error) })
+}
+
+twCity = new TwCitySelector({
+             el: '.city-selector',
+             elCounty: '.county',
+             elDistrict: '.district',
+             countyValue: '高雄市',
+             districtValue: '岡山區',
+             //only: ['台南市@仁德區|永康區|東區','高雄市'],
+             bootstrapStyle: false
+         });
+             
+//AjaxGet($("#countyID").val()+$("#districtID").val());
+    
+$("#btnQueryCity").click(function(){
+    //alert($("#countyID").val());
+    AjaxGet($("#countyID").val()+$("#districtID").val());
+});
+
+</script>
+

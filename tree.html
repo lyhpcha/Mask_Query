@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!--Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css">
+  
+</head>
+
+
+<body>
+    <!-- Bootstrap JS-->
+    <script src="https://cdn.jsdelivr.net/npm/tw-city-selector@2.1.0/dist/tw-city-selector.min.js" integrity="sha256-YXrAs7HworOykO4OSdfMRg5O3asXAUyqsCu9RvFy5U4=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
+    
+    <!--Vue.js-->
+    <!-- <script src="./lib/vue.min.js"></script> -->
+    
+    <!--AXIOS: AJAX -->
+    <script src="./lib/axios-0.19/axios.js"></script>
+    
+    <div class="container" id="continer_1">
+        <div class="row py-3 px-lg-5">
+            <div class="col">
+                <div class="city-selector">                     
+                    <!-- 縣市選單 -->
+                    <select class="county" id="countyID"></select>                    
+                    <!-- 區域選單 -->
+                    <select class="district" id="districtID"></select>            
+                         
+                    <button type="button" id="btnQueryCity">查詢</button>                      
+                </div> 
+            </div>  
+            <div class="col">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" id="checkbox1" value="前鎮區" checked>
+                  <label class="form-check-label" for="Checkbox1">前鎮區</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" id="checkbox2" value="新興區" checked>
+                  <label class="form-check-label" for="Checkbox2">新興區</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" id="checkbox3" value="鹽埕區" checked>
+                  <label class="form-check-label" for="Checkbox3">鹽埕區</label>
+                </div>
+                <button type="button" id="btnQueryCity1">查詢</button>
+            </div>  
+            <div class="col">
+                資料來源：<a href="https://data.nhi.gov.tw/Datasets/DatasetResource.aspx?rId=A21030000I-D50001-001">健保署資料開啟服務</a>
+            </div>              
+        </div>
+                
+        <div class="row py-3 px-lg-5">        
+            <div class="col">
+                <table id="table1"  data-sortable="true" data-sort-name="adult"  
+                       data-sort-order="desc" data-classes="table table-hover" data-thead-classes="thead-light" >
+                  <thead>
+                    <tr>
+                      <th data-field="name">藥局名稱</th>
+                      <th data-field="address" data-sortable="true">地址</th>
+                      <th data-field="telphone">電話</th>
+                      <th data-field="adult" data-sortable="true">大人</th>
+                      <th data-field="child" data-sortable="true">兒童</th>
+                      <th data-field="update">更新時間</th>
+                    </tr>
+                  </thead>                 
+                </table>
+            </div>
+        </div>
+        
+        <div class="row py-3 px-lg-5 d-none" id="spinner">
+            <div class="col">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>    
+    
+</body>
+
+</html>
+
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<!-- 注意使用的版本需要一樣：7.8.1 -->
+<script src="https://www.gstatic.com/firebasejs/7.8.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.8.1/firebase-firestore.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+
+<script> 
+         
+let sourcedata = [];
+let obj = {};
+let checklist = [];
+
+const CORS = 'https://cors-anywhere.herokuapp.com/'; // use cors-anywhere to fetch api data
+
+const CSV_URL = "http://data.nhi.gov.tw/Datasets/Download.ashx?rid=A21030000I-D50001-001&l=https://data.nhi.gov.tw/resource/mask/maskdata.csv"
+
+
+//var csv is the CSV file with headers
+function csvJSON(csv){
+
+  var lines=csv.split("\n");
+
+  var result = [];
+
+  var headers=lines[0].split(",");
+
+  for(var i=1;i<lines.length;i++){
+
+	  var obj = {};
+	  var currentline=lines[i].split(",");
+
+	  for(var j=0;j<headers.length;j++){
+		  obj[headers[j]] = currentline[j];
+	  }
+
+	  result.push(obj);
+
+  }
+  
+  //return result; //JavaScript object
+  return JSON.stringify(result); //JSON
+}
+
+
+function AjaxGet(checkstr) { 
+
+    //$("#tbody_data").html("");
+    $("#spinner").removeClass("d-none");
+    
+    checkstr.replace("臺","台");
+    
+    axios.get(CORS + CSV_URL)
+        .then((res) => { 
+            let htmlcode ="";
+            reslines = res.data.split(/\r\n|\n/); //依Enter切割CSV Text
+            reslines.splice(0,1); //移除第一行（欄位名）
+            reslines.splice((reslines.length-1),1); //移除最後一行（空白行）            
+            reslines.forEach(element => {           
+                element = element.replace("臺","台");            
+                if (element.indexOf(checkstr) != -1 ) {
+                    rowdata = element.split(',');            
+                    lastupdate = rowdata[6].split(" ");
+                    htmlcode = htmlcode +
+                               '<tr>' + 
+                               '<td>' + rowdata[1] + '</td>' +
+                               '<td>' + rowdata[2] + '</td>' +
+                               '<td>' + rowdata[3] + '</td>' +
+                               '<td>' + rowdata[4] + '</td>' +
+                               '<td>' + rowdata[5] + '</td>' +
+                               '<td>' + lastupdate[1] + '</td>' +
+                               '</tr>';
+                }
+            });
+
+            $("#tbody_data").html(htmlcode);
+            
+            $('#table').bootstrapTable('refresh');
+            
+            $("#spinner").addClass("d-none");
+
+            
+        })
+        .catch((error) => { alert(error) })
+}
+
+function GetDataBT(querydata) {
+    
+}
+
+function AjaxGetBT(checklist) { 
+    
+    $('#table1').bootstrapTable("removeAll");
+
+    $("#spinner").removeClass("d-none");
+    
+    for (i=0; i++; i<checklist.length) {
+        checklist[i].replace("臺","台");
+    }
+       
+    axios.get(CORS + CSV_URL)
+        .then((res) => { 
+            sourcedata = [];
+            reslines = res.data.split(/\r\n|\n/); //依Enter切割CSV Text
+            reslines.splice(0,1); //移除第一行（欄位名）
+            reslines.splice((reslines.length-1),1); //移除最後一行（空白行）            
+            reslines.forEach(element => {              
+                element = element.replace("臺","台");           
+                rowdata = element.split(',');            
+                lastupdate = rowdata[6].split(" ");
+                   
+                obj = { "name" :  rowdata[1] ,
+                        "address" :  rowdata[2] ,
+                        "telphone" :  rowdata[3] ,
+                        "adult" :  rowdata[4] ,
+                        "child" :  rowdata[5] ,
+                        "update" :  lastupdate[1] 
+                      } 
+                          
+                sourcedata.push(obj);                                         
+            });
+            
+            //$('#table1').bootstrapTable({data: btdata})     
+            //$('#table1').bootstrapTable('load', sourcedata)
+            $("#table1").bootstrapTable('load', customSearch(sourcedata,checklist));            
+            
+            $("#spinner").addClass("d-none");
+            
+        })
+        .catch((error) => { alert(error) })
+}
+
+//首次載入執行----------------------------------------------------
+twCity = new TwCitySelector({
+                 el: '.city-selector',
+                 elCounty: '.county',
+                 elDistrict: '.district',
+                 //countyValue: doc.data().county,
+                 //districtValue: doc.data().district,
+                 countyValue: "高雄市",
+                 districtValue: "岡山區",
+                 //only: ['台南市@仁德區|永康區|東區','高雄市'],
+                 bootstrapStyle: false
+             });
+    
+let firstdata = [{ "name" :  " " ,
+                   "address" :  " " ,
+                   "telphone" :  " " ,
+                   "adult" :  " " ,
+                   "child" :  " " ,
+                   "update" :  " "
+                }];
+$('#table1').bootstrapTable({data: firstdata}) ;
+
+checklist[0] = "雄市前鎮區";
+checklist[1] = "雄市新興區";
+checklist[2] = "雄市鹽埕區";
+AjaxGetBT(checklist);
+
+//---------------------------------------------------------------
+
+$("#btnQueryCity").click(function(){
+    checklist[0] = $("#countyID").val().substr(1)+$("#districtID").val() ;
+    checklist[1] = "No";
+    checklist[2] = "No";
+    $("#table1").bootstrapTable('load', customSearch(sourcedata,checklist));
+    console.log(sourcedata[0].address.substr(0,1));
+    console.log($("#countyID").val());
+    
+});
+
+$("#btnQueryCity1").click(function(){
+    querydata(sourcedata);
+});
+
+
+function querydata(sourcedata) {
+    //第一個是「高」，測試結果會找不到資料
+    if ($("#checkbox1").is(":checked")) { checklist[0] = "雄市" +  $("#checkbox1").val();
+    } else {
+        checklist[0] = "No" ;
+    }
+    if ($("#checkbox2").is(":checked")) { checklist[1] = "雄市" +  $("#checkbox2").val(); 
+    } else {
+        checklist[1] = "No" ;
+    }
+    if ($("#checkbox3").is(":checked")) { checklist[2] = "雄市" +  $("#checkbox3").val(); 
+    } else {
+        checklist[2] = "No" ;
+    }
+    
+    $("#table1").bootstrapTable('load', customSearch(sourcedata,checklist));
+}
+
+
+function customSearch(data, checklist1) {
+    return data.filter(function (row) {
+        if (row.address.indexOf(checklist1[0]) > -1) {
+            return row.address.indexOf(checklist1[0]);
+        } else if (row.address.indexOf(checklist1[1]) > -1) {
+            return row.address.indexOf(checklist1[1]);
+        } else if (row.address.indexOf(checklist1[2]) > -1) {
+            return row.address.indexOf(checklist1[2]) ;
+        }
+    })
+}
+
+
+</script>
+
