@@ -41,8 +41,8 @@
             </div>  
             <div class="col">
                 <div class="form-check form-check-inline">
-                  <input class="form-check-input" type="checkbox" id="checkbox1" value="前鎮區" checked>
-                  <label class="form-check-label" for="Checkbox1">前鎮區</label>
+                  <input class="form-check-input" type="checkbox" id="checkbox1" value="前金區" checked>
+                  <label class="form-check-label" for="Checkbox1">前金區</label>
                 </div>
                 <div class="form-check form-check-inline">
                   <input class="form-check-input" type="checkbox" id="checkbox2" value="新興區" checked>
@@ -107,6 +107,7 @@
 let sourcedata = [];
 let obj = {};
 let checklist = [];
+
 
 const CORS = 'https://cors-anywhere.herokuapp.com/'; // use cors-anywhere to fetch api data
 
@@ -181,9 +182,6 @@ function AjaxGet(checkstr) {
         .catch((error) => { alert(error) })
 }
 
-function GetDataBT(querydata) {
-    
-}
 
 function AjaxGetBT(checklist) { 
     
@@ -219,6 +217,8 @@ function AjaxGetBT(checklist) {
             
             //$('#table1').bootstrapTable({data: btdata})     
             //$('#table1').bootstrapTable('load', sourcedata)
+            
+            //自訂搜尋函數
             $("#table1").bootstrapTable('load', customSearch(sourcedata,checklist));            
             
             $("#spinner").addClass("d-none");
@@ -249,7 +249,7 @@ let firstdata = [{ "name" :  " " ,
                 }];
 $('#table1').bootstrapTable({data: firstdata}) ;
 
-checklist[0] = "雄市前鎮區";
+checklist[0] = "雄市前金區";
 checklist[1] = "雄市新興區";
 checklist[2] = "雄市鹽埕區";
 AjaxGetBT(checklist);

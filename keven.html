@@ -229,8 +229,8 @@ AjaxGetBT(checklist);
 $("#btnQueryCity").click(function(){
     checklist = $("#countyID").val().substr(1)+$("#districtID").val() ;
     $("#table1").bootstrapTable('load', customSearch(sourcedata,checklist));
-    console.log(sourcedata[0].address.substr(0,1));
-    console.log($("#countyID").val());
+    //console.log(sourcedata[0].address.substr(0,1));
+    //console.log($("#countyID").val());
     
 });
 
