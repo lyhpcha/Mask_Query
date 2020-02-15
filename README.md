@@ -15,3 +15,5 @@ URL：https://data.nhi.gov.tw/Datasets/DatasetResource.aspx?rId=A21030000I-D5000
 
 因為使用免費方案，所以有流量的限制。
 
+純前端技術，所以可以直接執行，但是會有跨網堿的問題，用https://cors-anywhere.herokuapp.com/來解決此問題
+
