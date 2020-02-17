@@ -58,7 +58,16 @@
                 資料來源：<a href="https://data.nhi.gov.tw/Datasets/DatasetResource.aspx?rId=A21030000I-D50001-001">健保署資料開啟服務</a>
             </div>              
         </div>
-                
+        <div class="row py-3 px-lg-5">
+            <div class="col">
+                網頁不會自動更新資料，如需更新，請按這裡=><a href="https://newagent-f7a16.firebaseapp.com/tree">資料更新</a>
+                <br />
+                健保署來源資料更新日：<span id="sourceupdate"><span>
+            </div>
+            <div class="col">
+                *備註：2020/2/17新增衛生所資料
+            </div>
+        </div>                
         <div class="row py-3 px-lg-5">        
             <div class="col">
                 <table id="table1"  data-sortable="true" data-sort-name="adult"  
@@ -196,6 +205,7 @@ function AjaxGetBT(checklist) {
     axios.get(CORS + CSV_URL)
         .then((res) => { 
             sourcedata = [];
+            sourceupdate = "";
             reslines = res.data.split(/\r\n|\n/); //依Enter切割CSV Text
             reslines.splice(0,1); //移除第一行（欄位名）
             reslines.splice((reslines.length-1),1); //移除最後一行（空白行）            
@@ -203,6 +213,7 @@ function AjaxGetBT(checklist) {
                 element = element.replace("臺","台");           
                 rowdata = element.split(',');            
                 lastupdate = rowdata[6].split(" ");
+                sourceupdate = rowdata[6];
                    
                 obj = { "name" :  rowdata[1] ,
                         "address" :  rowdata[2] ,
@@ -219,7 +230,9 @@ function AjaxGetBT(checklist) {
             //$('#table1').bootstrapTable('load', sourcedata)
             
             //自訂搜尋函數
-            $("#table1").bootstrapTable('load', customSearch(sourcedata,checklist));            
+            $("#table1").bootstrapTable('load', customSearch(sourcedata,checklist)); 
+
+            $("#sourceupdate").text(sourceupdate);           
             
             $("#spinner").addClass("d-none");
             
